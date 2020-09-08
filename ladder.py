@@ -1,3 +1,21 @@
+"""
+Created Sept 8, 2020
+@author: Christian Bunker
+
+Boltzmann ladder project:
+In this project, I create a simple agent based model of particles moving up and
+down a ladder. My aim is to connect this model to statistical mechanics by drawing
+parallels between particle speed and temperature, and between rungs and energy
+levels. Successful recreation of the Boltzmann distribution in this model could
+offer insights into the interpretation of the distribution.
+
+ladder.py:
+This module creates the ladder object which is physical system that the agents see.
+The ladder tracks the particles as they move between its rungs.
+"""
+
+import numpy as np
+
 ################################################################################
 # base class of ladder is doubly linked list
 ################################################################################
@@ -305,4 +323,5 @@ class DoubleLinkedList(object):
 
 class ladder(DoubleLinkedList):
 
-    def init():
+    def __init__():
+        return;

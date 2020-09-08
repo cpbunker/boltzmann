@@ -14,6 +14,8 @@ This module creates the ladder object which is physical system that the agents s
 The ladder tracks the particles as they move between its rungs.
 """
 
+import agent
+
 import numpy as np
 
 ################################################################################
@@ -318,10 +320,34 @@ class DoubleLinkedList(object):
     
 ################################################################################
 # ladder inherits from DLL
-# rungs of ladder are just Items with content = occupancy
+# rungs of ladder are simple objects with def'd energy, occupancy list
 ################################################################################
+
+class rung(object):
+    """
+    Each rung is def'd by its energy w/r/t the bottom rung (always zero energy)
+    The rung also keeps track of particles on it with a np array
+    """
+
+    def __init__(E, occupancy):
+        """
+        Args:
+        E, double, the energy level of the rung
+        occupancy, 1d np array, holds agent objects that are on this rung
+        """
+
+#### end rung class
+
 
 class ladder(DoubleLinkedList):
 
-    def __init__():
-        return;
+    def __init__(rung0):
+        """
+        begin the ladder DLL with only a starting rung. All higher rungs will be
+        created when needed.
+        """
+        
+        # place rung in DLL item, place item at start of ladder
+        self.start = Item(rung0);
+        
+        return; #### end init

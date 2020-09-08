@@ -320,7 +320,7 @@ class DoubleLinkedList(object):
     
 ################################################################################
 # ladder inherits from DLL
-# rungs of ladder are simple objects with def'd energy, occupancy list
+# rungs of ladder are simple objects with def'd energy, occupants list
 ################################################################################
 
 class rung(object):
@@ -328,20 +328,30 @@ class rung(object):
     Each rung is def'd by its energy w/r/t the bottom rung (always zero energy)
     The rung also keeps track of particles on it with a np array
     """
+    
+    #### overloaded methods
 
-    def __init__(E, occupancy):
+    def __init__(self, E, occupants):
         """
         Args:
         E, double, the energy level of the rung
-        occupancy, 1d np array, holds agent objects that are on this rung
+        occupants, 1d np array, holds agent objects that are on this rung
         """
+        
+        # set attributes
+        self.E = E; # energy of the rung
+        self.occupants = occupants; # particles on the rung
+        
+        return; #### end init
 
 #### end rung class
 
 
 class ladder(DoubleLinkedList):
 
-    def __init__(rung0):
+    #### overloaded methods
+
+    def __init__(self, rung0):
         """
         begin the ladder DLL with only a starting rung. All higher rungs will be
         created when needed.
@@ -351,3 +361,22 @@ class ladder(DoubleLinkedList):
         self.start = Item(rung0);
         
         return; #### end init
+        
+    #### time evolution of the system
+    
+    def TimeStep(self):
+        """
+        This method enacts the change in the state of the system with one time step.
+        This amounts to letting each particle experience one time step by having it
+        go up, down, or stay put (using its Act method).
+        """
+        
+        # iter over all rungs
+        for rung in self.In():
+        
+            # get, iter over occupants list from the rung
+            for a in rung.occupants:
+            
+                # let this particle decide on action
+                # Act returns 1 for go up, 0 for stay, -1 for go down
+                delta_level = a.Act();

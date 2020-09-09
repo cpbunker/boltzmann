@@ -14,6 +14,7 @@ This module codes the random-decision-making agents which traverse the ladder.
 """
 
 import numpy as np
+import time
 
 ################################################################################
 # define the agent class
@@ -50,7 +51,8 @@ class agent(object):
         self.up = prob_up;
         
         # other attributes
-        self.flag = false; # bool for keeping track of actions performed on agent
+        self.name = name; # simple id for agent
+        self.flag = False; # bool for keeping track of actions performed on agent
         
         #### end init
         
@@ -61,11 +63,11 @@ class agent(object):
         pstring = "";
         
         # name of agent
-        pstring += "Agent: "+name+"\n";
+        pstring += "Agent: "+self.name+"\n";
         
         # attributes
-        pstring += "- stay probability = "+self.stay;
-        pstring += "- up probability = "+self.up;
+        pstring += "- stay probability = "+str(self.stay)+"\n";
+        pstring += "- up probability = "+str(self.up)+"\n";
         
         return pstring;
         
@@ -141,7 +143,31 @@ class agent(object):
 # test code / wrapper functions
 ################################################################################
 
+
+def VisualizeAgent(N_ladder, ag):
+    """
+    Repeatedly print out simple ladder graphics as agent moves up and down
+    """
+    
+    # create ladder as array of rung strings
+    ladder=np.full(N_ladder,"|------|");
+    
+    # let agent act for a bit
+    for i in range(N_ladder):
+        time.sleep(1);
+        print(str(ag.Act()) + "\n");
+    
+    
+    
+    
+
 def AgentTestCode():
+
+    # create agent
+    a = agent(0.5,1);
+    print(a);
+    
+    VisualizeAgent(10, a);
 
     return;
     
@@ -151,5 +177,5 @@ def AgentTestCode():
 
 if( __name__ == "__main__"):
 
-    AgentTestCode;
+    AgentTestCode();
         

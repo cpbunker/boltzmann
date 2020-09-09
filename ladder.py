@@ -52,7 +52,7 @@ class Item(object):
         string representation of item
         '''
         
-        return "Item: "+str(self.content);
+        return str(self.content);
     
     
     def __repr__(self):
@@ -338,11 +338,26 @@ class rung(object):
         occupants, 1d np array, holds agent objects that are on this rung
         """
         
+        # check attribute types
+        if( type(E) != type(1.0) and type(E) != type(1) ):
+            raise TypeError("Energy level must be a number.");
+            
+        elif( type(occupants) != type(np.full(1,1) ) or np.shape(occupants)[0] != np.shape(np.full(1,1) )[0] ):
+            raise TypeError("Occupants list must be 1d numpy array");
+        
         # set attributes
         self.E = E; # energy of the rung
         self.occupants = occupants; # particles on the rung
         
         return; #### end init
+        
+    def __str__(self):
+        """
+        String rep of ladder rung, should be what comes out when we print ladder
+        """
+        
+        # create ladder as array of rung strings
+        return "|--------|";
 
 #### end rung class
 
@@ -362,6 +377,9 @@ class ladder(DoubleLinkedList):
         
         return; #### end init
         
+    #### basic rung retrieval
+
+        
     #### time evolution of the system
     
     def TimeStep(self):
@@ -377,6 +395,19 @@ class ladder(DoubleLinkedList):
             # get, iter over occupants list from the rung
             for a in rung.occupants:
             
-                # let this particle decide on action
-                # Act returns 1 for go up, 0 for stay, -1 for go down
-                delta_level = a.Act();
+                # let this particle decide on action, if it hasn't yet
+                if(not a.flag):
+                
+                    # Act returns 1 for go up, 0 for stay, -1 for go down
+                    delta = a.Act();
+                    
+                    # move the agent to upper or lower rung accordingly
+                    # can make use of .next and .prev
+                    if(delta == 1): # upper rung
+                        
+                        # place in upper rung and del from this rung
+                        rung.next.occupants.append(a);
+                        
+                
+                    # flag that this particle already acted this time step
+                    a.flag = True;

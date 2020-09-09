@@ -49,6 +49,9 @@ class agent(object):
         self.stay = prob_stay;
         self.up = prob_up;
         
+        # other attributes
+        self.flag = false; # bool for keeping track of actions performed on agent
+        
         #### end init
         
     def __str__(self):

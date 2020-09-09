@@ -342,7 +342,7 @@ class rung(object):
         if( type(E) != type(1.0) and type(E) != type(1) ):
             raise TypeError("Energy level must be a number.");
             
-        elif( type(occupants) != type(np.full(1,1) ) or np.shape(occupants)[0] != np.shape(np.full(1,1) )[0] ):
+        elif( type(occupants) != type(np.full(1,1) ) ):
             raise TypeError("Occupants list must be 1d numpy array");
         
         # set attributes
@@ -351,13 +351,14 @@ class rung(object):
         
         return; #### end init
         
-    def __str__(self):
+    def __repr__(self):
         """
         String rep of ladder rung, should be what comes out when we print ladder
         """
         
         # create ladder as array of rung strings
-        return "|--------|";
+        return "|--------| "+str(self.occupants)+"\n";
+
 
 #### end rung class
 
@@ -366,19 +367,62 @@ class ladder(DoubleLinkedList):
 
     #### overloaded methods
 
-    def __init__(self, rung0):
+    def __init__(self):
         """
         begin the ladder DLL with only a starting rung. All higher rungs will be
         created when needed.
         """
         
         # place rung in DLL item, place item at start of ladder
-        self.start = Item(rung0);
+        self.start = Item(rung(0, np.array([]) ) );
         
         return; #### end init
         
-    #### basic rung retrieval
+    #### placement of particles on rung
+    
+    def Start(self, part):
+        """
+        start the particle on the lowest rung
+        """
+        
+        self.start.content.occupants.append(part);
+    
+    def Place(self, part, r, delta):
+        """
+        Place the given particle, formerly on the given rung, onto new rung as
+        spec'd by delta (-1, 0, 1)
+        """
 
+        # place based on value of delta
+        if(delta == -1): # lower rung
+            
+            # check that lower rung exists
+            if(r.prev != None): # it is there
+                r.prev.content.occupants.append(part);
+            else: # particle has to stay on this (lowest) rung
+                r.content.occupants.append();
+                
+        elif(delta == 0): # stay on this rung
+            r.content.occupants.append(part);
+        elif(delta == 1): # upper rung
+        
+            # check that upper rung exists
+            if(r.next != None): # it exists
+                r.next.content.occupants.append(part);
+            else: # we have to make it
+            
+                # determine its properties
+                energy = r.content.E + (r.content.E - r.prev.content.E);
+                occ = np.array([]);
+                
+                # add it to ladder
+                self.append(Item(rung(energy, occ) ) );
+                
+                # place the particle
+                r.next.content.occupants.append(part);
+                
+        else: # wrong delta value given
+            raise ValueError("Place() can only place particles for delta = -1, 0, 1.\n");
         
     #### time evolution of the system
     
@@ -390,10 +434,16 @@ class ladder(DoubleLinkedList):
         """
         
         # iter over all rungs
-        for rung in self.In():
+        for r in self.In():
         
-            # get, iter over occupants list from the rung
-            for a in rung.occupants:
+            # pull out old occupants of rung
+            occ = r.content.occupants
+            
+            # overwrite occupants list as empty
+            r.occupants = np.array([])
+        
+            # iter over old occupants
+            for a in r.content.occupants:
             
                 # let this particle decide on action, if it hasn't yet
                 if(not a.flag):
@@ -401,13 +451,36 @@ class ladder(DoubleLinkedList):
                     # Act returns 1 for go up, 0 for stay, -1 for go down
                     delta = a.Act();
                     
-                    # move the agent to upper or lower rung accordingly
-                    # can make use of .next and .prev
-                    if(delta == 1): # upper rung
-                        
-                        # place in upper rung and del from this rung
-                        rung.next.occupants.append(a);
+                    # move the agent to rung accordingly
+                    self.Place(a, r, delta);
                         
                 
                     # flag that this particle already acted this time step
                     a.flag = True;
+                    
+                    
+
+################################################################################
+# test code / wrapper functions
+################################################################################
+
+def PlaceTestCode():
+
+    # make a ladder
+    lad = ladder();
+    print(lad);
+    
+    # place a particle on the ladder
+    a = agent.agent(0,1);
+    lad.Start(a);
+
+    return; ### end place test code
+    
+    
+################################################################################
+# execute code
+################################################################################
+
+if(__name__ == "__main__"):
+
+    PlaceTestCode();

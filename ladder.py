@@ -79,11 +79,10 @@ class DoubleLinkedList(object):
     
     def __str__(self):
         '''
-        String representation of the DLL
+        String representation of the DLL is just list of its items
         '''
         
-        # simply use string of conversion of DLL to simple list using In()
-        return str(self.In() );
+        return str(self.In())
     
     
     def __len__(self):
@@ -153,7 +152,7 @@ class DoubleLinkedList(object):
         Insert an item into the beginning of any DLL.
         
         Args:
-        :param it: object of any type to be added to this list as an item
+        :param it: object of any type to be added to this list as item content
         '''
         
         # if empty just insert it at start
@@ -180,7 +179,7 @@ class DoubleLinkedList(object):
         Inserts an item at the end of the DLL.
         
         Args:
-        :param it: object of any type to be added to the end of this list as an item
+        :param it: object of any type to be added to the end of this list as item content
         '''
         
         # if list is empty we just put it in at start
@@ -204,7 +203,7 @@ class DoubleLinkedList(object):
     
     def pop(self):
         '''
-        Removes and returns the first item of the list.
+        Removes and returns the content of the first item of the list.
         '''
         
         # check that the list is not empty
@@ -232,7 +231,7 @@ class DoubleLinkedList(object):
         Inserts an item to the DLL as the ith item.
         
         Args:
-        :param it: object of any type to be added to list as an item
+        :param it: object of any type to be added to list as item content
         :param i: int, index to put the item at
         '''
         
@@ -308,7 +307,7 @@ class DoubleLinkedList(object):
         while (n != None):
             
             # add item to the list
-            inlist.append(n.content);
+            inlist.append(n);
             
             # update n using link to next item
             n = n.next;
@@ -342,8 +341,8 @@ class rung(object):
         if( type(E) != type(1.0) and type(E) != type(1) ):
             raise TypeError("Energy level must be a number.");
             
-        elif( type(occupants) != type(np.full(1,1) ) ):
-            raise TypeError("Occupants list must be 1d numpy array");
+        elif( type(occupants) != type([]) ):
+            raise TypeError("Occupants list must be a list");
         
         # set attributes
         self.E = E; # energy of the rung
@@ -357,7 +356,7 @@ class rung(object):
         """
         
         # create ladder as array of rung strings
-        return "|--------| "+str(self.occupants)+"\n";
+        return "|--------| "+str(self.occupants);
 
 
 #### end rung class
@@ -374,18 +373,51 @@ class ladder(DoubleLinkedList):
         """
         
         # place rung in DLL item, place item at start of ladder
-        self.start = Item(rung(0, np.array([]) ) );
+        self.start = Item(rung(0, []) );
+        
+        # how rungs correspond to energy
+        self.deltaE = 1; # each rung 1 energy unit higher
         
         return; #### end init
         
+    def __str__(self):
+        '''
+        String representation of the DLL
+        '''
+        
+        # print each item of the DLL In() list on separate line
+        retlist = ""
+        for i in range(len(self.In())):
+            retlist += "E = "+str(i*self.deltaE);
+            retlist += " "*(7-len("E = "+str(i*self.deltaE)) ) + str(self[i]) + "\n";
+            
+        return retlist; #### end str
+        
     #### placement of particles on rung
     
-    def Start(self, part):
+    def Start(self, parts):
         """
         start the particle on the lowest rung
+        
+        Args:
+        parts: single agent or any iterable of agents (can be higher dimension also)
         """
         
-        self.start.content.occupants.append(part);
+        # try treating parts as an iterable
+        try:
+            # if parts is an iterable run over each part
+            for p in parts:
+                self.Start(p); # call recursively to allow nested inputs
+            
+        except: # should have reached input which is just an agent
+        
+            if(type(parts) == type (agent.TestAgent() ) ): # single agent
+                self.start.content.occupants.append(parts);
+                
+            else: #problem
+                raise ValueError("Start must take single agent or list of agent objects");
+                
+        #### end start
     
     def Place(self, part, r, delta):
         """
@@ -400,29 +432,33 @@ class ladder(DoubleLinkedList):
             if(r.prev != None): # it is there
                 r.prev.content.occupants.append(part);
             else: # particle has to stay on this (lowest) rung
-                r.content.occupants.append();
+                r.content.occupants.append(part);
                 
         elif(delta == 0): # stay on this rung
             r.content.occupants.append(part);
+            
         elif(delta == 1): # upper rung
         
             # check that upper rung exists
             if(r.next != None): # it exists
                 r.next.content.occupants.append(part);
+                
             else: # we have to make it
             
                 # determine its properties
-                energy = r.content.E + (r.content.E - r.prev.content.E);
-                occ = np.array([]);
+                energy = r.content.E + self.deltaE; # energy goes up unit
+                occ = [];
                 
                 # add it to ladder
-                self.append(Item(rung(energy, occ) ) );
+                self.append(rung(energy, occ)); # DLL append takes content, places it in item
                 
                 # place the particle
                 r.next.content.occupants.append(part);
                 
         else: # wrong delta value given
             raise ValueError("Place() can only place particles for delta = -1, 0, 1.\n");
+            
+        #### end place
         
     #### time evolution of the system
     
@@ -434,16 +470,17 @@ class ladder(DoubleLinkedList):
         """
         
         # iter over all rungs
-        for r in self.In():
+        for r in self.In(): # remember each r actually an item, w/ r.content a rung
         
             # pull out old occupants of rung
-            occ = r.content.occupants
+            occs = r.content.occupants
             
             # overwrite occupants list as empty
-            r.occupants = np.array([])
+            r.content.occupants = [];
         
             # iter over old occupants
-            for a in r.content.occupants:
+            for a in occs:
+                    
             
                 # let this particle decide on action, if it hasn't yet
                 if(not a.flag):
@@ -451,12 +488,35 @@ class ladder(DoubleLinkedList):
                     # Act returns 1 for go up, 0 for stay, -1 for go down
                     delta = a.Act();
                     
+                    if( a.name == "verbose"): # we want debug print statements for this a
+                        print("verbose acted with result: "+str(delta));
+                    
                     # move the agent to rung accordingly
                     self.Place(a, r, delta);
                         
-                
                     # flag that this particle already acted this time step
                     a.flag = True;
+                    
+                    if( a.name == "verbose"): #debug
+                        print("verbose placed and flagged");
+                        
+                # else if particle already acted, just put it back in occupants
+                else:
+                    r.content.occupants.append(a);
+                    
+                    if(a.name == "verbose"):
+                        print("verbose already acted, placed back on rung");
+                    
+        # after the entire step, reset all flags
+        for r in self.In():
+            for a in r.content.occupants:
+                a.flag = False;
+                
+                if( a.name == "verbose"): # debug
+                    print("end of time step, verbose flag reset");
+                
+                    
+        #### end time step
                     
                     
 
@@ -464,15 +524,21 @@ class ladder(DoubleLinkedList):
 # test code / wrapper functions
 ################################################################################
 
-def PlaceTestCode():
+def TimeStepTestCode():
 
     # make a ladder
     lad = ladder();
-    print(lad);
     
-    # place a particle on the ladder
-    a = agent.agent(0,1);
-    lad.Start(a);
+    # place an interesting particle on the ladder
+    a1 = agent.agent(0,0.5, name = "verbose");
+    a2 = agent.TestAgents(3); # add some other uninteresting agents
+    lad.Start((a1, a2));
+    
+    # go over some time steps
+    for t in range(80):
+    
+        lad.TimeStep();
+        print("t = "+str(t)+"\n"+str(lad));
 
     return; ### end place test code
     
@@ -483,4 +549,4 @@ def PlaceTestCode():
 
 if(__name__ == "__main__"):
 
-    PlaceTestCode();
+    TimeStepTestCode();

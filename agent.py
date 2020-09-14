@@ -71,6 +71,10 @@ class agent(object):
         
         return pstring;
         
+    def __repr__(self):
+    
+        return self.name;
+        
     #### choice scenarios of the agent
     
     def OnRung(self):
@@ -137,6 +141,37 @@ class agent(object):
                 return -1;
                 
         #### end act
+        
+        
+################################################################################
+# helpful functions that go with agent class
+################################################################################
+
+def TestAgent():
+    """
+    Just returns an agent object with default params if you quickly need one for
+    debugging purposes.
+    """
+    
+    return agent(0, 0, name="test"); #### end test agent
+    
+def TestAgents(n):
+    """
+    Returns a list of test agents for quick debugging
+    
+    Args:
+    n, int, number of agents in the list
+    """
+    
+    ret = [];
+    
+    for i in range(n):
+        ret.append( TestAgent() );
+        
+    return ret; #### end Test Agents
+    
+    
+
         
         
 ################################################################################

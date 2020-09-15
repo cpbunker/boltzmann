@@ -355,8 +355,13 @@ class rung(object):
         String rep of ladder rung, should be what comes out when we print ladder
         """
         
-        # create ladder as array of rung strings
-        return "|--------| "+str(self.occupants);
+        # show occupancy of rung and if it has any verbose agents
+        retstring = "[ "+str(len(self.occupants))+" ]";
+        for a in self.occupants: # look for verbose agents
+            if(a.name == "verbose"):
+                retstring += " X";
+                
+        return retstring; #### end repr
 
 
 #### end rung class
@@ -392,6 +397,37 @@ class ladder(DoubleLinkedList):
             retlist += " "*(7-len("E = "+str(i*self.deltaE)) ) + str(self[i]) + "\n";
             
         return retlist; #### end str
+        
+    #### basic access methods
+    
+    def N(self):
+        """
+        Quickly get how many total particles are in the ladder
+        """
+        
+        # return var
+        counter = 0;
+        
+        # iter over rungs
+        for r in self.In():
+            counter += len(r.content.occupants);
+            
+        return counter;
+        
+    def maxE(self):
+        """
+        Return the energy of the max occupied rung ( ie Fermi energy)
+        """
+        
+        # iter backwards over rungs
+        r = self.In()[-1]; # start with topmost rung
+        
+        while True: # keep going till we find EF and return
+            if(len(r.content.occupants) != 0): # this rung is occupied so is fermi E
+                return r.content.E;
+            
+            else: # try the one lower
+                r = r.prev;
         
     #### placement of particles on rung
     
@@ -517,6 +553,10 @@ class ladder(DoubleLinkedList):
                 
                     
         #### end time step
+        
+    #### calculating properties of the system
+    
+    
                     
                     
 
@@ -535,10 +575,13 @@ def TimeStepTestCode():
     lad.Start((a1, a2));
     
     # go over some time steps
-    for t in range(80):
+    for t in range(50):
     
         lad.TimeStep();
         print("t = "+str(t)+"\n"+str(lad));
+        
+    print(lad.N());
+    print(lad.maxE() );
 
     return; ### end place test code
     
